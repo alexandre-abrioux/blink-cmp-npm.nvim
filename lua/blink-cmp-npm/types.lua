@@ -1,0 +1,11 @@
+---@class NpmPackage
+---@field name string
+---@field description string
+---@field version string
+---@field date string
+---@field links NpmPackageLink
+---@field keywords string[]
+
+---@class NpmPackageLink
+---@field npm string
+---@field homepage string

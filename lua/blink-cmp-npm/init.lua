@@ -1,7 +1,10 @@
---- @module 'blink.cmp'
+local compute_meta = require("blink-cmp-npm.utils.compute_meta")
+local generate_doc = require("blink-cmp-npm.utils.generate_doc")
+local semantic_sort = require("blink-cmp-npm.utils.semantic_sort")
 
---- @class blink-cmp-npm.Source: blink.cmp.Source
---- @field opts blink-cmp-npm.Options
+---@module 'blink.cmp'
+---@class blink-cmp-npm.Source: blink.cmp.Source
+---@field opts blink-cmp-npm.Options
 local source = {}
 
 ---@class blink-cmp-npm.Options: blink.cmp.PathOpts
@@ -28,65 +31,6 @@ end
 
 function source:get_trigger_characters()
 	return { '"' }
-end
-
----@param ctx blink.cmp.Context
-local function compute_meta(ctx)
-	-- restrict completion on lines < 200 characters for performances
-	local line = ctx.line:sub(1, 200)
-	local name = line:match('%s*"([^"]*)"?')
-	if name == nil then
-		return { line, nil, nil, nil, nil, nil, nil, nil, nil, nil }
-	end
-
-	local _, pos_end_name = line:find(name, 1, true)
-	local pos_second_quote
-	local pos_third_quote
-	local pos_fourth_quote
-	local current_version
-	local current_version_matcher
-	local last_quote_present = false
-	local find_version = false
-
-	if pos_end_name then
-		local _, pos_second_quote_find = line:find('"', pos_end_name and pos_end_name + 1 or 1, true)
-		pos_second_quote = pos_second_quote_find
-	end
-
-	if pos_second_quote then
-		local _, pos_third_quote_find = line:find('"', pos_second_quote and pos_second_quote + 1 or 1, true)
-		pos_third_quote = pos_third_quote_find
-	end
-
-	if pos_third_quote then
-		local _, pos_fourth_quote_find = line:find('"', pos_third_quote and pos_third_quote + 1 or 1, true)
-		pos_fourth_quote = pos_fourth_quote_find
-	end
-
-	if pos_third_quote and pos_fourth_quote and pos_fourth_quote - pos_third_quote > 1 then
-		current_version = line:match('.*".*".*"[~^]?(.*)"')
-		current_version_matcher = line:match('.*".*".*"([~^]?).*"')
-	end
-
-	last_quote_present = pos_fourth_quote and pos_fourth_quote > pos_third_quote or false
-
-	if pos_third_quote then
-		local col = ctx.cursor[2]
-		find_version = col >= pos_third_quote
-	end
-
-	return {
-		line,
-		name,
-		pos_end_name,
-		pos_second_quote,
-		pos_third_quote,
-		pos_fourth_quote,
-		current_version,
-		current_version_matcher,
-		last_quote_present,
-		find_version,
-	}
 end
 
 function source:get_completions(ctx, callback)
@@ -121,24 +65,24 @@ function source:get_completions(ctx, callback)
 						return
 					end
 
-					--- @type lsp.CompletionItem[]
+					---@type lsp.CompletionItem[]
 					local items = {}
 
-					--- @type lsp.CompletionItem
+					---@type lsp.CompletionItem
 					local item_minor = {
 						label = "^" .. version,
 						sortText = version .. "_1",
 						kind = kind,
 					}
 
-					--- @type lsp.CompletionItem
+					---@type lsp.CompletionItem
 					local item_patch = {
 						label = "~" .. version,
 						sortText = version .. "_2",
 						kind = kind,
 					}
 
-					--- @type lsp.CompletionItem
+					---@type lsp.CompletionItem
 					local item_strict = {
 						label = version,
 						sortText = version .. "_3",
@@ -172,10 +116,11 @@ function source:get_completions(ctx, callback)
 						return
 					end
 
-					--- @type lsp.CompletionItem[]
+					---@type lsp.CompletionItem[]
 					local items = {}
 
 					-- populate items
+					---@type string[]
 					local versions = vim.json.decode(result.stdout)
 					for _, version in ipairs(versions) do
 						if self.opts.only_semantic_versions and not string.match(version, "^%d+%.%d+%.%d+$") then
@@ -203,24 +148,7 @@ function source:get_completions(ctx, callback)
 					end
 
 					-- order result
-					table.sort(items, function(a, b)
-						local a_matcher, a_major, a_minor, a_patch = string.match(a.label, "([~^]?)(%d+)%.(%d+)%.(%d+)")
-						local b_matcher, b_major, b_minor, b_patch = string.match(b.label, "([~^]?)(%d+)%.(%d+)%.(%d+)")
-						if a_major ~= b_major then
-							return tonumber(a_major) > tonumber(b_major)
-						end
-						if a_minor ~= b_minor then
-							return tonumber(a_minor) > tonumber(b_minor)
-						end
-						if a_patch ~= b_patch then
-							return tonumber(a_patch) > tonumber(b_patch)
-						end
-						if a_matcher ~= b_matcher then
-							return (a_matcher == "^" and 3 or a_matcher == "~" and 2 or 1)
-								> (b_matcher == "^" and 3 or b_matcher == "~" and 2 or 1)
-						end
-						return true
-					end)
+					table.sort(items, semantic_sort)
 
 					-- add sorting property for blink.cmp
 					for index, item in ipairs(items) do
@@ -252,10 +180,11 @@ function source:get_completions(ctx, callback)
 					return
 				end
 
-				--- @type lsp.CompletionItem[]
+				---@type lsp.CompletionItem[]
 				local items = {}
 
 				-- populate items
+				---@type NpmPackage[]
 				local npm_items = vim.json.decode(result.stdout)
 				for npm_item_key, npm_item in ipairs(npm_items) do
 					table.insert(items, {
@@ -264,24 +193,7 @@ function source:get_completions(ctx, callback)
 						sortText = npm_item_key,
 						documentation = {
 							kind = "markdown",
-							value = "# `"
-								.. npm_item.name
-								.. "`\n\n"
-								.. npm_item.links.npm
-								.. (npm_item.links.homepage and ("\n" .. npm_item.links.homepage) or "")
-								.. "\n\n"
-								.. "## Latest\n"
-								.. npm_item.version
-								.. " ("
-								.. npm_item.date
-								.. ")"
-								.. "\n\n"
-								.. (npm_item.description and "## About\n" or "")
-								.. (npm_item.description and npm_item.description:sub(1, 200) or "")
-								.. (npm_item.description and #npm_item.description > 200 and "..." or "")
-								.. (npm_item.description and "\n\n" or "")
-								.. (#npm_item.keywords > 0 and "## Keywords\n" or "")
-								.. table.concat(npm_item.keywords, " "),
+							value = generate_doc(npm_item),
 						},
 					})
 				end
