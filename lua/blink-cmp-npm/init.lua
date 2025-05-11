@@ -172,17 +172,12 @@ function source:get_completions(ctx, callback)
 						return
 					end
 
-					local lines = vim.split(result.stdout, "\n")
-					table.remove(lines, 1) -- remove {
-					table.remove(lines, #lines) -- remove last empty line
-					table.remove(lines, #lines) -- remove }
-
 					--- @type lsp.CompletionItem[]
 					local items = {}
 
 					-- populate items
-					for _, npm_item in ipairs(lines) do
-						local version = string.match(npm_item, '%s*"(.*)",?')
+					local versions = vim.json.decode(result.stdout)
+					for _, version in ipairs(versions) do
 						if self.opts.only_semantic_versions and not string.match(version, "^%d+%.%d+%.%d+$") then
 							goto continue
 						else
@@ -247,8 +242,7 @@ function source:get_completions(ctx, callback)
 			{
 				"npm",
 				"search",
-				"--no-description",
-				"--parseable",
+				"--json",
 				"--no-update-notifier",
 				name,
 			},
@@ -258,49 +252,36 @@ function source:get_completions(ctx, callback)
 					return
 				end
 
-				local lines = vim.split(result.stdout, "\n")
-				table.remove(lines, #lines) -- remove last empty line
-
-				if #lines == 0 then
-					return
-				end
-
 				--- @type lsp.CompletionItem[]
 				local items = {}
 
-				for npm_item_key, npm_item in ipairs(lines) do
-					local label, description, release_date, version, tags =
-						string.match(npm_item, "^([^\t]*)\t([^\t]*)\t?([^\t]*)\t([^\t]*)\t([^\t]*)$")
-					-- handle packages without description
-					if release_date == "" then
-						release_date = description
-						description = nil
-					end
-					label = label:gsub("^%s*(.-)%s*$", "%1") -- trim
+				-- populate items
+				local npm_items = vim.json.decode(result.stdout)
+				for npm_item_key, npm_item in ipairs(npm_items) do
 					table.insert(items, {
 						kind = kind,
-						label = label,
+						label = npm_item.name,
 						sortText = npm_item_key,
 						documentation = {
 							kind = "markdown",
 							value = "# `"
-								.. label
+								.. npm_item.name
 								.. "`\n\n"
-								.. "https://www.npmjs.com/package/"
-								.. label
+								.. npm_item.links.npm
+								.. (npm_item.links.homepage and ("\n" .. npm_item.links.homepage) or "")
 								.. "\n\n"
 								.. "## Latest\n"
-								.. version
+								.. npm_item.version
 								.. " ("
-								.. release_date
+								.. npm_item.date
 								.. ")"
 								.. "\n\n"
-								.. (description and "## About\n" or "")
-								.. (description and description:sub(1, 200) or "")
-								.. (description and #description > 200 and "..." or "")
-								.. (description and "\n\n" or "")
-								.. (tags == "" and "" or "## Keywords\n")
-								.. tags,
+								.. (npm_item.description and "## About\n" or "")
+								.. (npm_item.description and npm_item.description:sub(1, 200) or "")
+								.. (npm_item.description and #npm_item.description > 200 and "..." or "")
+								.. (npm_item.description and "\n\n" or "")
+								.. (#npm_item.keywords > 0 and "## Keywords\n" or "")
+								.. table.concat(npm_item.keywords, " "),
 						},
 					})
 				end
