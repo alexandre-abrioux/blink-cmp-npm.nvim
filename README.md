@@ -55,7 +55,7 @@ Add the plugin to your packer manager and make sure it is loaded before `blink.c
 
 | Option                   | Type       | Default | Description                                            |
 | ------------------------ | ---------- | ------- | ------------------------------------------------------ |
-| `ignore`                 | `string[]` | `{}`    | Ignore package names that match any of these strings.  |
+| `ignore`                 | `string[]` | `{}`    | Ignore versions that match any of these strings.       |
 | `only_semantic_versions` | `boolean`  | `true`  | Ignore versions that do not match semantic versioning. |
 | `only_latest_version`    | `boolean`  | `false` | When suggesting versions, only show the latest.        |
 
