@@ -1,5 +1,0 @@
-describe("compute_meta", function()
-  it("test", function()
-    assert.truthy(true)
-  end)
-end)
