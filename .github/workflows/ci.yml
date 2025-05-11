@@ -19,7 +19,7 @@ jobs:
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
       - name: Build flake
-        run: nix build
+        run: nix develop
       - name: Format
         run: nix develop --command stylua -c lua
       - name: Lint
