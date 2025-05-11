@@ -7,7 +7,7 @@
       let pkgs = nixpkgs.legacyPackages.${system};
       in {
         devShells.default = pkgs.mkShell {
-          packages = with pkgs; [ selene lua51Packages.busted ];
+          packages = with pkgs; [ lua51Packages.busted selene stylua ];
         };
       });
 }
