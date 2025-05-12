@@ -1,6 +1,9 @@
 ---@param npm_item NpmPackage
 ---@return string
 local function generate_doc(npm_item)
+  local date_pattern = "^(%d+)%-(%d+)%-(%d+)T"
+  local year, month, day = npm_item.date:match(date_pattern)
+  local date = { year, month, day }
   return "# `"
     .. npm_item.name
     .. "`\n\n"
@@ -10,7 +13,7 @@ local function generate_doc(npm_item)
     .. "## Latest\n"
     .. npm_item.version
     .. " ("
-    .. npm_item.date
+    .. table.concat(date, "-")
     .. ")"
     .. "\n\n"
     .. (npm_item.description and "## About\n" or "")
