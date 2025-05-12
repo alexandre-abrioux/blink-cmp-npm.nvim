@@ -4,6 +4,7 @@
 ---@field version string
 ---@field date string
 ---@field links NpmPackageLink
+---@field license string[]
 ---@field keywords string[]
 
 ---@class NpmPackageLink
