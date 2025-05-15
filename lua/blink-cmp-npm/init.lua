@@ -1,6 +1,7 @@
 local compute_meta = require("blink-cmp-npm.utils.compute_meta")
 local generate_doc = require("blink-cmp-npm.utils.generate_doc")
 local ignore_version = require("blink-cmp-npm.utils.ignore_version")
+local is_cursor_in_dependencies_node = require("blink-cmp-npm.utils.is_cursor_in_dependencies_node")
 local semantic_sort = require("blink-cmp-npm.utils.semantic_sort")
 
 ---@module 'blink.cmp'
@@ -35,6 +36,12 @@ function source:get_trigger_characters()
 end
 
 function source:get_completions(ctx, callback)
+  local is_in_dependencies_node = is_cursor_in_dependencies_node()
+
+  if not is_in_dependencies_node then
+    return function() end
+  end
+
   local meta = compute_meta(ctx)
   local _, name, _, _, pos_third_quote, _, current_version, current_version_matcher, _, find_version = unpack(meta)
 
