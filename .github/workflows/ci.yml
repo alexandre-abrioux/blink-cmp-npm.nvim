@@ -25,4 +25,4 @@ jobs:
       - name: Lint
         run: nix develop --command selene lua
       - name: Test
-        run: nix develop --command busted
+        run: nix develop --command ./minit.lua
