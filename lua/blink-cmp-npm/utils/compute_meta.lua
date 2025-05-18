@@ -39,8 +39,7 @@ local function compute_meta(line, ctx)
 
   if find_version then
     local line_up_to_cursor = line:sub(0, col)
-    current_version = line_up_to_cursor:match('^.*".*".*"[~^]?(.*)"?$')
-    current_version_matcher = line_up_to_cursor:match('^.*".*".*"([~^]?).*"?$')
+    current_version_matcher, current_version = line_up_to_cursor:match('^[^"]*"[^"]*"[^"]*"([~^]?)([^"]*)"?$')
   end
 
   return {

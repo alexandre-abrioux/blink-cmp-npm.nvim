@@ -45,10 +45,15 @@ function source:get_completions(ctx, callback)
 
   local line = extract_line(ctx)
   local meta = compute_meta(line, ctx)
-  local name, _pos_start_name, _pos_end_name, _pos_second_quote, _pos_third_quote, _pos_fourth_quote, current_version, current_version_matcher, find_version =
+  local name, _pos_start_name, _pos_end_name, _pos_second_quote, _pos_third_quote, pos_fourth_quote, current_version, current_version_matcher, find_version =
     unpack(meta)
 
   if not name then
+    return function() end
+  end
+
+  local col = ctx.cursor[2]
+  if pos_fourth_quote ~= nil and col >= pos_fourth_quote then
     return function() end
   end
 
