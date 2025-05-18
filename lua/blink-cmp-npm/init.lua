@@ -1,4 +1,5 @@
 local compute_meta = require("blink-cmp-npm.utils.compute_meta")
+local extract_line = require("blink-cmp-npm.utils.extract_line")
 local generate_doc = require("blink-cmp-npm.utils.generate_doc")
 local ignore_version = require("blink-cmp-npm.utils.ignore_version")
 local is_cursor_in_dependencies_node = require("blink-cmp-npm.utils.is_cursor_in_dependencies_node")
@@ -42,8 +43,9 @@ function source:get_completions(ctx, callback)
     return function() end
   end
 
-  local meta = compute_meta(ctx)
-  local _line, name, _pos_start_name, _pos_end_name, _pos_second_quote, _pos_third_quote, _pos_fourth_quote, current_version, current_version_matcher, find_version =
+  local line = extract_line(ctx)
+  local meta = compute_meta(line, ctx)
+  local name, _pos_start_name, _pos_end_name, _pos_second_quote, _pos_third_quote, _pos_fourth_quote, current_version, current_version_matcher, find_version =
     unpack(meta)
 
   if not name then
@@ -224,8 +226,9 @@ local function replace_text(ctx, insert_text, pos_first_quote, pos_second_quote,
 end
 
 function source:execute(ctx, item, callback)
-  local meta = compute_meta(ctx)
-  local line, _name, pos_start_name, _pos_end_name, pos_second_quote, pos_third_quote, pos_fourth_quote, _current_version, _current_version_matcher, find_version =
+  local line = extract_line(ctx)
+  local meta = compute_meta(line, ctx)
+  local _name, pos_start_name, _pos_end_name, pos_second_quote, pos_third_quote, pos_fourth_quote, _current_version, _current_version_matcher, find_version =
     unpack(meta)
   local insert_text = item.label
   if item.insertText then

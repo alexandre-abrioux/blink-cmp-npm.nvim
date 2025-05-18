@@ -2,10 +2,9 @@ local compute_meta = require("blink-cmp-npm.utils.compute_meta")
 
 describe("compute_meta", function()
   it("should compute cursor metadata", function()
-    local meta = compute_meta({ line = '  "name": "1.0.0",', cursor = { 1, 4 } })
-    local line, name, pos_start_name, pos_end_name, pos_second_quote, pos_third_quote, pos_fourth_quote, current_version, current_version_matcher, find_version =
+    local meta = compute_meta('  "name": "1.0.0",', { cursor = { 1, 4 } })
+    local name, pos_start_name, pos_end_name, pos_second_quote, pos_third_quote, pos_fourth_quote, current_version, current_version_matcher, find_version =
       unpack(meta)
-    assert.are.equal('  "name": "1.0.0",', line)
     assert.are.equal("name", name)
     assert.are.equal(4, pos_start_name)
     assert.are.equal(7, pos_end_name)
@@ -18,10 +17,9 @@ describe("compute_meta", function()
   end)
 
   it("should handle missing 2nd quote", function()
-    local meta = compute_meta({ line = '  "name', cursor = { 1, 4 } })
-    local line, name, pos_start_name, pos_end_name, pos_second_quote, pos_third_quote, pos_fourth_quote, current_version, current_version_matcher, find_version =
+    local meta = compute_meta('  "name', { cursor = { 1, 4 } })
+    local name, pos_start_name, pos_end_name, pos_second_quote, pos_third_quote, pos_fourth_quote, current_version, current_version_matcher, find_version =
       unpack(meta)
-    assert.are.equal('  "name', line)
     assert.are.equal("name", name)
     assert.are.equal(4, pos_start_name)
     assert.are.equal(7, pos_end_name)
@@ -34,10 +32,9 @@ describe("compute_meta", function()
   end)
 
   it("should handle missing 3rd quote", function()
-    local meta = compute_meta({ line = '  "name":', cursor = { 1, 10 } })
-    local line, name, pos_start_name, pos_end_name, pos_second_quote, pos_third_quote, pos_fourth_quote, current_version, current_version_matcher, find_version =
+    local meta = compute_meta('  "name":', { cursor = { 1, 10 } })
+    local name, pos_start_name, pos_end_name, pos_second_quote, pos_third_quote, pos_fourth_quote, current_version, current_version_matcher, find_version =
       unpack(meta)
-    assert.are.equal('  "name":', line)
     assert.are.equal("name", name)
     assert.are.equal(4, pos_start_name)
     assert.are.equal(7, pos_end_name)
@@ -50,10 +47,9 @@ describe("compute_meta", function()
   end)
 
   it("should handle missing 4th quote", function()
-    local meta = compute_meta({ line = '  "name": "', cursor = { 1, 12 } })
-    local line, name, pos_start_name, pos_end_name, pos_second_quote, pos_third_quote, pos_fourth_quote, current_version, current_version_matcher, find_version =
+    local meta = compute_meta('  "name": "', { cursor = { 1, 12 } })
+    local name, pos_start_name, pos_end_name, pos_second_quote, pos_third_quote, pos_fourth_quote, current_version, current_version_matcher, find_version =
       unpack(meta)
-    assert.are.equal('  "name": "', line)
     assert.are.equal("name", name)
     assert.are.equal(4, pos_start_name)
     assert.are.equal(7, pos_end_name)
@@ -66,10 +62,9 @@ describe("compute_meta", function()
   end)
 
   it("should handle 4th quote but no version", function()
-    local meta = compute_meta({ line = '  "name": ""', cursor = { 1, 12 } })
-    local line, name, pos_start_name, pos_end_name, pos_second_quote, pos_third_quote, pos_fourth_quote, current_version, current_version_matcher, find_version =
+    local meta = compute_meta('  "name": ""', { cursor = { 1, 12 } })
+    local name, pos_start_name, pos_end_name, pos_second_quote, pos_third_quote, pos_fourth_quote, current_version, current_version_matcher, find_version =
       unpack(meta)
-    assert.are.equal('  "name": ""', line)
     assert.are.equal("name", name)
     assert.are.equal(4, pos_start_name)
     assert.are.equal(7, pos_end_name)

@@ -1,12 +1,9 @@
+---@param line string
 ---@param ctx blink.cmp.Context
-local function compute_meta(ctx)
-  local row = ctx.cursor[1]
-  local col = ctx.cursor[2]
+local function compute_meta(line, ctx)
+  -- protect regex performance
+  assert(#line <= 200)
 
-  -- get line from buffer, not ctx, to get latest up-to-date value
-  -- this resolves some edge cases when autocomplete is not updated after deleting a character
-  -- we also restrict completion on the 200 first characters for regex performances
-  local line = vim.api.nvim_buf_get_text(0, row - 1, 0, row - 1, 200, {})[1]
   local name = line:match('%s*"([^"]*)"?')
   if name == nil then
     return { line, nil, nil, nil, nil, nil, nil, nil, nil, nil }
@@ -41,11 +38,11 @@ local function compute_meta(ctx)
   end
 
   if pos_third_quote then
+    local col = ctx.cursor[2]
     find_version = col >= pos_third_quote
   end
 
   return {
-    line,
     name,
     pos_start_name,
     pos_end_name,
