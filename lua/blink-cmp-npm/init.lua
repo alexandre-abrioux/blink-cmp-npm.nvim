@@ -224,10 +224,9 @@ local function replace_text(ctx, insert_text, pos_first_quote, pos_second_quote,
   if pos_second_quote then
     vim.api.nvim_buf_set_text(0, row_0, pos_first_quote, row_0, pos_second_quote - 1, { insert_text })
   else
-    insert_text = insert_text .. '"'
-    vim.api.nvim_buf_set_text(0, row_0, pos_first_quote, row_0, pos_end_line, { insert_text })
+    vim.api.nvim_buf_set_text(0, row_0, pos_first_quote, row_0, pos_end_line, { insert_text .. '"' })
   end
-  vim.api.nvim_win_set_cursor(0, { row_1, pos_first_quote + #insert_text })
+  vim.api.nvim_win_set_cursor(0, { row_1, pos_first_quote + #insert_text + 1 })
 end
 
 function source:execute(ctx, item, callback)
