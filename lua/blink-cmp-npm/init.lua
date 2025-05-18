@@ -1,4 +1,5 @@
 local compute_meta = require("blink-cmp-npm.utils.compute_meta")
+local extract_line = require("blink-cmp-npm.utils.extract_line")
 local generate_doc = require("blink-cmp-npm.utils.generate_doc")
 local ignore_version = require("blink-cmp-npm.utils.ignore_version")
 local is_cursor_in_dependencies_node = require("blink-cmp-npm.utils.is_cursor_in_dependencies_node")
@@ -42,8 +43,10 @@ function source:get_completions(ctx, callback)
     return function() end
   end
 
-  local meta = compute_meta(ctx)
-  local _, name, _, _, pos_third_quote, _, current_version, current_version_matcher, _, find_version = unpack(meta)
+  local line = extract_line(ctx)
+  local meta = compute_meta(line, ctx)
+  local name, _pos_start_name, _pos_end_name, _pos_second_quote, _pos_third_quote, _pos_fourth_quote, current_version, current_version_matcher, find_version =
+    unpack(meta)
 
   if not name then
     return function() end
@@ -51,7 +54,6 @@ function source:get_completions(ctx, callback)
 
   local kind = require("blink.cmp.types").CompletionItemKind.Module
   if find_version then
-    assert(pos_third_quote)
     if self.opts.only_latest_version then
       vim.system(
         {
@@ -206,25 +208,39 @@ function source:get_completions(ctx, callback)
   end
 end
 
+---@param ctx blink.cmp.Context
+---@param insert_text string
+---@param pos_first_quote integer
+---@param pos_second_quote integer | nil
+---@param pos_end_line integer
+local function replace_text(ctx, insert_text, pos_first_quote, pos_second_quote, pos_end_line)
+  local row_1 = ctx.cursor[1]
+  local row_0 = row_1 - 1
+  if pos_second_quote then
+    vim.api.nvim_buf_set_text(0, row_0, pos_first_quote, row_0, pos_second_quote - 1, { insert_text })
+  else
+    insert_text = insert_text .. '"'
+    vim.api.nvim_buf_set_text(0, row_0, pos_first_quote, row_0, pos_end_line, { insert_text })
+  end
+  vim.api.nvim_win_set_cursor(0, { row_1, pos_first_quote + #insert_text })
+end
+
 function source:execute(ctx, item, callback)
-  local meta = compute_meta(ctx)
-  local _, _, _, _, _, _, _, _, last_quote_present, _ = unpack(meta)
+  local line = extract_line(ctx)
+  local meta = compute_meta(line, ctx)
+  local _name, pos_start_name, _pos_end_name, pos_second_quote, pos_third_quote, pos_fourth_quote, _current_version, _current_version_matcher, find_version =
+    unpack(meta)
   local insert_text = item.label
   if item.insertText then
     insert_text = item.insertText
   end
-  vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<ESC>", true, false, true), "n", false)
-  if last_quote_present then
-    vim.api.nvim_feedkeys('ci"' .. insert_text, "n", true)
+  local line_last_char = line:sub(#line)
+  local pos_end_line = line_last_char == "," and (#line - 1) or #line
+  if find_version then
+    replace_text(ctx, insert_text, pos_third_quote, pos_fourth_quote, pos_end_line)
   else
-    local line_last_char = ctx.line:sub(#ctx.line)
-    local line_end_with_quotes = line_last_char and line_last_char == '"' or false
-    local col = ctx.cursor[2]
-    if line_end_with_quotes and col == #ctx.line then
-      vim.api.nvim_feedkeys("a" .. insert_text .. '"', "n", true)
-    else
-      vim.api.nvim_feedkeys('F"c$' .. '"' .. insert_text .. '"', "n", true)
-    end
+    local pos_first_quote = pos_start_name - 1
+    replace_text(ctx, insert_text, pos_first_quote, pos_second_quote, pos_end_line)
   end
   callback()
 end
