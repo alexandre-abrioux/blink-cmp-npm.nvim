@@ -36,7 +36,9 @@ Add the plugin to your packer manager and make sure it is loaded before `blink.c
           name = "npm",
           module = "blink-cmp-npm",
           async = true,
-          -- the options below are optional
+          -- optional - make blink-cmp-npm completions top priority (see `:h blink.cmp`)
+          score_offset = 100,
+          -- optional - blink-cmp-npm config
           ---@module "blink-cmp-npm"
           ---@type blink-cmp-npm.Options
           opts = {
