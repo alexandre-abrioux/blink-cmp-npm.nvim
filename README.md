@@ -10,7 +10,7 @@ modified to work natively with `blink.cmp`.
 
 ## Requirements
 
-- [`neovim`](https://github.com/neovim/neovim) >= 0.7
+- [`neovim`](https://github.com/neovim/neovim) > `0.7.0`
 - [`blink.cmp`](https://github.com/Saghen/blink.cmp)
 - [`npm`](https://github.com/npm/cli)
 
