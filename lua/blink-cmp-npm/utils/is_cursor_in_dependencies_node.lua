@@ -14,7 +14,7 @@ local function is_cursor_in_dependencies_node()
       local key_node = node:child(0)
       if key_node and key_node:type() == "string" then
         local key_text = vim.treesitter.get_node_text(key_node, bufnr)
-        if key_text == '"dependencies"' or key_text == '"devDependencies"' then
+        if key_text == '"dependencies"' or key_text == '"devDependencies"' or key_text == '"peerDependencies"' then
           return true
         end
       end

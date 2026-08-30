@@ -21,6 +21,9 @@ local create_buffer = function()
   },
   "devDependencies": {
     "typescript": "^4.6.3"
+  },
+  "peerDependencies": {
+    "axios": "^1.20.0"
   }
 }]]
   vim.api.nvim_buf_set_text(0, 0, 0, 0, 0, vim.split(package_json, "\n"))
@@ -45,7 +48,13 @@ describe("is_cursor_in_dependencies_node", function()
       assert.is_true(result)
     end)
 
-    it("should return true when cursor outside of dependencies or devDependencies", function()
+    it("should return true when cursor in peerDependencies", function()
+      vim.api.nvim_win_set_cursor(0, { 10, 5 })
+      local result = is_cursor_in_dependencies_node()
+      assert.is_true(result)
+    end)
+
+    it("should return true when cursor outside of dependencies or devDependencies or peerDependencies", function()
       vim.api.nvim_win_set_cursor(0, { 1, 5 })
       local result = is_cursor_in_dependencies_node()
       assert.is_true(result)
@@ -69,7 +78,13 @@ describe("is_cursor_in_dependencies_node", function()
       assert.is_true(result)
     end)
 
-    it("should return false when cursor outside of dependencies or devDependencies", function()
+    it("should return true when cursor in peerDependencies", function()
+      vim.api.nvim_win_set_cursor(0, { 10, 5 })
+      local result = is_cursor_in_dependencies_node()
+      assert.is_true(result)
+    end)
+
+    it("should return false when cursor outside of dependencies or devDependencies or peerDependencies", function()
       vim.api.nvim_win_set_cursor(0, { 1, 5 })
       local result = is_cursor_in_dependencies_node()
       assert.is_false(result)
