@@ -7,7 +7,8 @@ load(vim.fn.system("curl -s https://raw.githubusercontent.com/folke/lazy.nvim/re
 require("lazy.minit").busted({
   spec = {
     "nvim-treesitter/nvim-treesitter",
-    commit = "cf12346a3414fa1b06af75c79faebe7f76df080a",
+    lazy = false,
+    build = ":TSUpdate",
   },
   rocks = {
     enabled = false,

@@ -2,12 +2,23 @@
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
   inputs.flake-utils.url = "github:numtide/flake-utils";
 
-  outputs = { nixpkgs, flake-utils, ... }:
-    flake-utils.lib.eachDefaultSystem (system:
-      let pkgs = nixpkgs.legacyPackages.${system};
-      in {
+  outputs =
+    { nixpkgs, flake-utils, ... }:
+    flake-utils.lib.eachDefaultSystem (
+      system:
+      let
+        pkgs = nixpkgs.legacyPackages.${system};
+      in
+      {
         devShells.default = pkgs.mkShell {
-          packages = with pkgs; [ neovim lua51Packages.busted stylua selene ];
+          packages = with pkgs; [
+            neovim
+            tree-sitter
+            lua51Packages.busted
+            stylua
+            selene
+          ];
         };
-      });
+      }
+    );
 }

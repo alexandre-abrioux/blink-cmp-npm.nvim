@@ -1,13 +1,13 @@
 local is_cursor_in_dependencies_node = require("blink-cmp-npm.utils.is_cursor_in_dependencies_node")
-local parsers = require("nvim-treesitter.parsers")
-local ts_configs = require("nvim-treesitter.configs")
+local ts = require("nvim-treesitter")
 
+-- treesitter is included with nvim 0.12+
+-- but the JSON parser needs to be installed with nvim-treesitter
 local setup_treesitter = function()
-  ts_configs.setup({
-    ensure_installed = { "json" },
-    sync_install = true,
-    highlight = { enable = false },
+  ts.setup({
+    install_dir = vim.fn.stdpath("data") .. "/site",
   })
+  ts.install({ "json" }):wait(3000) -- install the JSON parser synchronously
 end
 
 local create_buffer = function()
@@ -26,18 +26,12 @@ local create_buffer = function()
   vim.api.nvim_buf_set_text(0, 0, 0, 0, 0, vim.split(package_json, "\n"))
 end
 
-local force_parsing = function()
-  local lang = parsers.get_buf_lang(0)
-  local parser = parsers.get_parser(0, lang)
-  parser:parse()
-end
-
 describe("is_cursor_in_dependencies_node", function()
   setup_treesitter()
   create_buffer()
 
   describe("without treesitter", function()
-    vim.cmd("TSDisable json")
+    vim.treesitter.stop()
 
     it("should return true when cursor in dependencies", function()
       vim.api.nvim_win_set_cursor(0, { 4, 5 })
@@ -59,8 +53,9 @@ describe("is_cursor_in_dependencies_node", function()
   end)
 
   describe("with treesitter", function()
-    vim.cmd("TSEnable json")
-    force_parsing()
+    vim.treesitter.start()
+    local parser = assert(vim.treesitter.get_parser())
+    parser:parse(true) -- wait for treesitter to parse the buffer (synchronously)
 
     it("should return true when cursor in dependencies", function()
       vim.api.nvim_win_set_cursor(0, { 4, 5 })
